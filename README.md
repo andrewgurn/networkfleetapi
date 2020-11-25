@@ -4,7 +4,6 @@ networkfleetapi is a PHP class that connects to Verizon's NetworkFleet API and h
 # composer installation
 Add this repo to your composer.json and require it. For example:
 
-
     {
         "name": "myNamespace/myProject",
         "repositories": [
@@ -17,7 +16,6 @@ Add this repo to your composer.json and require it. For example:
             "andrewgurn/networkfleetapi": "dev-main"
         }
     }
-`
 
 # manual installation
 Copy NetworkFleetAPI.php to your project's root and then require it where you need it.  For example, if you copied NetworkFleetAPI to a folder called 'includes' in your webroot:

@@ -32,9 +32,9 @@ class NetworkFleetAPI
 		//If we don't have a token already, create a new connection
 		if($tokenIn == "")
 		{
-			createConnection($userIn, $secretIn);
+			apiConnect($userIn, $secretIn, '');
 		}
-		//If we already have a token, populate everything that would otherwise be populated by createConnection() 
+		//If we already have a token, populate everything that would otherwise be populated by apiConnect().  No need to bother calling out again
 		else
 		{
 			$this->token = $tokenIn;
@@ -45,14 +45,22 @@ class NetworkFleetAPI
 		}
 	}
 	
-	function createConnection($userIn, $secretIn)
+	function apiConnect($userIn, $secretIn, $refreshTokenIn = '')
 	{
 		$host = $this->defaultAuthHost;
 		$method = 'POST';
 		$path = '/token';
-		$url = "https://$host$path";
-		$data = "grant_type=password&username=$userIn&password=$secretIn";
+		$url = urlencode("https://$host$path");
 
+		if($refreshTokenIn != "")
+		{
+			$data = "grant_type=password&username=$userIn&password=$secretIn";
+		}
+		else
+		{
+			$data = "grant_type=refresh_token&refresh_token=$refreshTokenIn";
+		}
+		
 		$options = array( CURLOPT_HTTPHEADER => array("Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW", "Content-Type: application/x-www-form-urlencoded"),
 				  CURLOPT_POSTFIELDS => $data,
 				  CURLOPT_HEADER => false,
@@ -69,30 +77,6 @@ class NetworkFleetAPI
 		$this->refreshToken = $this->tokenArray ["refresh_token"];
 	}
 	
-	function refreshToken($refreshTokenIn)
-	{
-		$host = $this->defaultAuthHost;
-		$method = 'POST';
-		$path = '/token';
-		$url = "https://$host$path";
-		$data = "grant_type=refresh_token&refresh_token=$refreshTokenIn";
-
-		$options = array( CURLOPT_HTTPHEADER => array("Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW", "Content-Type: application/x-www-form-urlencoded"),
-				  CURLOPT_POSTFIELDS => $data,
-				  CURLOPT_HEADER => false,
-				  CURLOPT_URL => $url,
-				  CURLOPT_RETURNTRANSFER => true,
-				  CURLOPT_SSL_VERIFYPEER => false);
-		$curl = curl_init();
-		curl_setopt_array($curl, $options);
-		$json = curl_exec($curl);
-		curl_close($curl);
-		$this->tokenArray = json_decode($json, true);
-		$this->token = $this->tokenArray ["access_token"];
-		$this->tokenType = $this->tokenArray ["token_type"];
-		$this->refreshToken = $this->tokenArray ["refresh_token"];
-	}
-
 	function getQuery($path, $method, $queryParameters = "")
 	{
 		$host = $this->defaultHost;
@@ -102,7 +86,7 @@ class NetworkFleetAPI
 			$path .= $queryParameters;
 		}
 		
-		$url = "https://$host$path";
+		$url = urlencode("https://$host$path");
 		
 		$options = array( CURLOPT_HTTPHEADER => array(
 								"Authorization: ".$this->tokenType." ".$this->token." "
@@ -120,24 +104,41 @@ class NetworkFleetAPI
 		return $json;
 	}
 	
+	//In case you need the results of the connection elsewhere
 	function getTokenArray()
 	{
 		return $this->tokenArray;
 	}
 
+	//Calls the test API
 	function testCall()
 	{	
-		return $this->getQuery('/test', 'GET', '');
+		return $this->getQuery('/test?', 'GET', '');
 	}
 	
-	function getVehicleLocations()
+	/*
+		Find the location of all your vehicles, a specific vehicle, or a group of vehichles.  All search options are optional
+		See the API docs for a decription of each:
+		https://developer.networkfleet.com/resourceClass/index?resourcePath=locations 
+	*/
+	function getVehicleLocations($index = '', $limit = '', $forGroup = '', $forAttribute = '', $withLabel = '', $withVehicleID = '', $withVIN = '')
 	{
-		return $this->getQuery('/locations', 'GET','');
+		$queryParameters = '';
+
+		if($index != ''){ $queryParameters .= "index=$index&"; }
+		if($limit != ''){ $queryParameters .= "limit=$limit&"; }
+		if($forGroup != ''){ $queryParameters .= "for-group=$forGroup&"; }
+		if($forAttribute != ''){ $queryParameters .= "for-attribute=$forAttribute&"; }
+		if($withLabel != ''){ $queryParameters .= "with-label=$withLabel&"; }
+		if($withVehicleID != ''){ $queryParameters .= "with-vehicle-id=$withVehicleID&"; }
+		if($withVIN != ''){ $queryParameters .= "with-vin=$withVIN&"; }
+		
+		return $this->getQuery('/locations?$queryParameters', 'GET','');
 	}
 
 	function getLandmarkCategories()
 	{
-		return $this->getQuery('/landmarkCategories', 'GET', '');
+		return $this->getQuery('/landmarkCategories?', 'GET', '');
 	}
 
 } //end class

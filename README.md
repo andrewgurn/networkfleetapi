@@ -1,7 +1,7 @@
 # networkfleetapi
 networkfleetapi is a PHP class that connects to Verizon's NetworkFleet API and helps you grab data
 
-This is a work in progess.  As of now it'll get you connected and you can pass in queries you contruct yourself.  I am working on the functions that do the queries for you as I get the itme to doo so.
+This is a work in progess.  As of now it'll get you connected and you can pass in queries you construct yourself.  I am working on the functions that do the queries for you as I get the itme to doo so.
 
 # composer installation
 Add this repo to your composer.json and require it. For example:
